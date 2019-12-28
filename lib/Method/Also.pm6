@@ -13,8 +13,6 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
     }
 
     role AliasableClassHOW {
-        has @!roles-to-compose;
-
         method compose (Mu \o, :$compiler_services) is hidden-from-backtrace {
           my @r := self.roles_to_compose(o);
           # Copy the roles because they are consumed by the superclass method.
@@ -32,10 +30,34 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
             #say "Class: Adding alias {.key} to {o.^name} as {.value.name}...";
             o.^add_method(.key, .value) if $_;
           }
-          nextsame;
+          my \retVal := callsame;
+          for @r -> \r {
+            say "R: { r.^name }";
+            unless %aliases-composed{r.^name} {
+              for %aliases{r.^name}[] -> $p {
+                # cw: This should never happen, but somehow it is...
+                next unless $p;
+                next unless $p.value.is_dispatcher;
+
+                say "Role: Adding alias {$p.key} to {r.^name} as {$p.value.name}...";
+
+                $obj.^add_method(
+                  $p.key,
+                  -> |c { self."{ $p.value.name }"(|c) }
+                );
+              }
+            }
+            %aliases-composed{r.^name} = True;
+          }
+          retVal;
         }
 
-        method incorporate_multi_methods ($obj) {
+        # This method supposedly doesn't exist in the superclass:
+        #   https://colabti.org/irclogger/irclogger_log/raku-dev?date=2019-12-27#l111
+        # so how was it to be invoked?
+        method incorporate_multi_candidates ($obj) {
+          # .multi_methods_to_incorporate DOES exist, so is this supposed to
+          # be a callnext?
           my @multis := self.multi_methods_to_incorporate;
           my $*TYPE-ENV;
           my \r := callsame;
@@ -110,7 +132,6 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
         # }
         #
         # method list-aliases (Mu \o) { getTheList(o) }
-
     }
 
     multi sub trait_mod:<is>(Method:D \meth, :$also!) is export {
@@ -124,12 +145,12 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
 
       if h ~~ Metamodel::ClassHOW {
         h does AliasableClassHOW unless h ~~ AliasableClassHOW;
-        h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
+        #h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
       }
 
       if h ~~ @elegible-roles.any {
         say "»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»» Punning ROLE to { h.^name }!";
-        h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
+        #h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
       }
 
       if $also {
