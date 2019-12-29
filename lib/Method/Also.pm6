@@ -4,13 +4,13 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
     our %aliases;
     my %aliases-composed;
 
-    sub getTheList(\o) {
-      for %aliases{o.^name}[] {
-        next unless $_;
-        my $mn = .value ?? "Method { .value.name }" !! 'UNDEFINED METHOD!';
-        say "{ .key.fmt("%-20s") } --> $mn";
-      }
-    }
+    # sub getTheList(\o) {
+    #   for %aliases{o.^name}[] {
+    #     next unless $_;
+    #     my $mn = .value ?? "Method { .value.name }" !! 'UNDEFINED METHOD!';
+    #     say "{ .key.fmt("%-20s") } --> $mn";
+    #   }
+    # }
 
     role AliasableClassHOW {
         method compose (Mu \o, :$compiler_services) is hidden-from-backtrace {
@@ -30,7 +30,6 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
             #say "Class: Adding alias {.key} to {o.^name} as {.value.name}...";
             o.^add_method(.key, .value) if $_;
           }
-          my \retVal := callsame;
           for @r -> \r {
             say "R: { r.^name }";
             unless %aliases-composed{r.^name} {
@@ -43,54 +42,54 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
 
                 $obj.^add_method(
                   $p.key,
-                  -> |c { self."{ $p.value.name }"(|c) }
+                  -> |c { $obj."{ $p.value.name }"(|c) }
                 );
               }
             }
             %aliases-composed{r.^name} = True;
           }
-          retVal;
+          nextsame;
         }
 
-        # This method supposedly doesn't exist in the superclass:
-        #   https://colabti.org/irclogger/irclogger_log/raku-dev?date=2019-12-27#l111
-        # so how was it to be invoked?
-        method incorporate_multi_candidates ($obj) {
-          # .multi_methods_to_incorporate DOES exist, so is this supposed to
-          # be a callnext?
-          my @multis := self.multi_methods_to_incorporate;
-          my $*TYPE-ENV;
-          my \r := callsame;
-          for @!roles-to-compose -> \r {
-            say "R: { r.^name }";
-            unless %aliases-composed{r.^name} {
-              for %aliases{r.^name}[] -> $p {
-                # cw: This should never happen, but somehow it is...
-                next unless $p;
-                next unless $p.value.is_dispatcher;
+        # # This method supposedly doesn't exist in the superclass:
+        # #   https://colabti.org/irclogger/irclogger_log/raku-dev?date=2019-12-27#l111
+        # # so how was it to be invoked?
+        # method incorporate_multi_candidates ($obj) {
+        #   # .multi_methods_to_incorporate DOES exist, so is this supposed to
+        #   # be a callnext?
+        #   my @multis := self.multi_methods_to_incorporate;
+        #   my $*TYPE-ENV;
+        #   my \r := callsame;
+        #   for @!roles-to-compose -> \r {
+        #     say "R: { r.^name }";
+        #     unless %aliases-composed{r.^name} {
+        #       for %aliases{r.^name}[] -> $p {
+        #         # cw: This should never happen, but somehow it is...
+        #         next unless $p;
+        #         next unless $p.value.is_dispatcher;
+        #
+        #         say "Role: Adding alias {$p.key} to {r.^name} as {$p.value.name}...";
+        #
+        #         $obj.^add_method($p.key, $p.value);
+        #         for @multis {
+        #           $obj.^add_multi_method(
+        #             $p.key,
+        #             .code.instantiate_generic($*TYPE-ENV)
+        #           );
+        #         }
+        #       }
+        #     }
+        #     %aliases-composed{r.^name} = True;
+        #   }
+        # }
 
-                say "Role: Adding alias {$p.key} to {r.^name} as {$p.value.name}...";
-
-                $obj.^add_method($p.key, $p.value);
-                for @multis {
-                  $obj.^add_multi_method(
-                    $p.key,
-                    .code.instantiate_generic($*TYPE-ENV)
-                  );
-                }
-              }
-            }
-            %aliases-composed{r.^name} = True;
-          }
-        }
-
-        method specialize_with(Mu $, Mu \old_type_env, Mu \type_env, |) {
-            $*TYPE-ENV := old_type_env.^name eq 'BOOTContext'
-              ?? old_type_env
-              !! type_env;
-        }
-
-        method list-aliases (Mu \o) { getTheList(o) }
+        # method specialize_with(Mu $, Mu \old_type_env, Mu \type_env, |) {
+        #     $*TYPE-ENV := old_type_env.^name eq 'BOOTContext'
+        #       ?? old_type_env
+        #       !! type_env;
+        # }
+        #
+        # method list-aliases (Mu \o) { getTheList(o) }
 
     }
 
@@ -138,20 +137,20 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
       my \h := $*PACKAGE.HOW;
       my \n := $*PACKAGE.^name;
 
-      my @elegible-roles = (
-        Metamodel::ParametricRoleHOW,
-        Metamodel::ParametricRoleGroupHOW
-      );
+      # my @elegible-roles = (
+      #   Metamodel::ParametricRoleHOW,
+      #   Metamodel::ParametricRoleGroupHOW
+      # );
 
       if h ~~ Metamodel::ClassHOW {
         h does AliasableClassHOW unless h ~~ AliasableClassHOW;
         #h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
       }
 
-      if h ~~ @elegible-roles.any {
-        say "»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»» Punning ROLE to { h.^name }!";
-        #h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
-      }
+      # if h ~~ @elegible-roles.any {
+      #   say "»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»» Punning ROLE to { h.^name }!";
+      #   #h does AliasableRoleHOW  unless h ~~ AliasableRoleHOW;
+      # }
 
       if $also {
         if $also ~~ List {
