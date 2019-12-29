@@ -3,7 +3,7 @@ use Test;
 
 use Method::Also;
 
-plan 11;
+plan 13;
 
 class A {
     has $.foo;
@@ -27,6 +27,10 @@ role Ber {
     multi method bar_ber (Int $a) {
         'Int';
     }
+
+    multi method bar_ber (:$hazzy is required) {
+        'Hazzy';
+    }
 }
 
 class Bar does Ber {
@@ -34,13 +38,16 @@ class Bar does Ber {
     multi method foo($foo) is also<bazzy> { $foo }
 }
 
-is Bar.foo,             42, 'is foo() ok';
-is Bar.foo(666),       666, 'is foo(666) ok';
-is Bar.bar,             42, 'is bar() ok';
-is Bar.bazzy(768),     768, 'is bazzy(768) ok';
-is Bar.bar_ber('a'), 'Str', "is Bar.bar_ber('a') ok";
-is Bar.bar_ber(42),  'Int', "is Bar.bar_ber(42) ok";
-is Bar.bar-ber('a'), 'Str', "is Bar.bar_ber('a') ok";
-is Bar.bar-ber(42),  'Int', "is Bar.bar_ber(42) ok";
+is Bar.foo,                  42, 'is foo() ok';
+is Bar.foo(666),            666, 'is foo(666) ok';
+is Bar.bar,                  42, 'is bar() ok';
+is Bar.bazzy(768),          768, 'is bazzy(768) ok';
+is Bar.bar_ber('a'),      'Str', "is Bar.bar_ber('a') ok";
+is Bar.bar_ber(42),       'Int', "is Bar.bar_ber(42) ok";
+is Bar.bar_ber(:hazzy), 'Hazzy', "is Bar.bar_ber(:hazzy) ok";
+is Bar.bar-ber('a'),      'Str', "is Bar.bar-ber('a') ok";
+is Bar.bar-ber(42),       'Int', "is Bar.bar-ber(42) ok";
+pass 'This is not a test!';
+is Bar.bar-ber(:hazzy), 'Hazzy', "is Bar.bar-ber(:hazzy) ok";
 
 # vim: ft=perl6 expandtab sw=4

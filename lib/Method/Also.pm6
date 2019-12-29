@@ -40,9 +40,9 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
 
                 say "Role: Adding alias {$p.key} to {r.^name} as {$p.value.name}...";
 
-                $obj.^add_method(
+                o.^add_method(
                   $p.key,
-                  -> |c { $obj."{ $p.value.name }"(|c) }
+                  -> |c { o."{ $p.value.name }"( |c.list.skip(1), |c.hash ) }
                 );
               }
             }
