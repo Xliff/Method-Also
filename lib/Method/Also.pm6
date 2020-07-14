@@ -1,7 +1,7 @@
 use v6.c;
 
-module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
-    our %aliases;
+module Method::Also:ver<0.0.5>:auth<cpan:ELIZABETH> {
+    my %aliases;
     my %aliases-composed;
 
     # sub getTheList(\o) {
@@ -94,43 +94,40 @@ module Method::Also:ver<0.0.3>:auth<cpan:ELIZABETH> {
     }
 
     role AliasableRoleHOW {
-      # Dummy reference code, now.
-        # method incorporate_multi_candidates ($obj) {
-        #   my @multis := self.multi_methods_to_incorporate;
-        #   my $*TYPE-ENV, $*ROLE;
-        #   my \r := callsame;
-        #   unless %aliases-composed{r.^name} {
-        #     for %aliases{r.^name}[] -> $p {
-        #       # cw: This should never happen, but somehow it is...
-        #       next unless $p;
-        #       next unless $p.value.is_dispatcher;
-        #
-        #       say "Role: Adding alias {$p.key} to {r.^name} as {$p.value.name}...";
-        #
-        #       obj.^add_method($p.key, $p.value);
-        #       for r.^multi_methods_to_incorporate {
-        #           obj.^add_multi_method(
-        #               $p.key,
-        #               .code.instantiate_generic($*TYPE-ENV)
-        #           );
-        #       }
-        #   }
-        #   %aliases-composed{r.^name} = True;
-        # }
-        #
-        # method specialize(Mu \r, Mu:U \obj, *@pos_args, *%named_args)
-        #     is hidden-from-backtrace
-        # {
-        #   $*ROLE := r;
-        #   callsame;
-        # }
-        #
-        # method specialize_with (Mu \obj, Mu \type_env, @pos_args) {
-        #   $*TYPE-ENV := type_env;
-        #   nextsame;
-        # }
-        #
-        # method list-aliases (Mu \o) { getTheList(o) }
+
+        method specialize(Mu \r, Mu:U \obj, *@pos_args, *%named_args)
+            is hidden-from-backtrace
+        {
+            obj.HOW does AliasableClassHOW unless obj.HOW ~~ AliasableClassHOW;
+
+            my $*TYPE-ENV;
+            my $r := callsame;
+            unless %aliases-composed{r.^name} {
+                for %aliases{r.^name}[] -> $p {
+                    # cw: This should never happen, but somehow it is...
+                    next unless $p;
+                    next unless $p.value.is_dispatcher;
+
+                    obj.^add_method($p.key, $p.value);
+                    for r.^multi_methods_to_incorporate {
+                        obj.^add_multi_method(
+                            $p.key,
+                            .code.instantiate_generic($*TYPE-ENV)
+                        );
+                    }
+                }
+                %aliases-composed{r.^name} = True;
+            }
+            $r;
+        }
+
+        method specialize_with(Mu $, Mu \old_type_env, Mu \type_env, |) {
+            $*TYPE-ENV := old_type_env.^name eq 'BOOTContext'
+              ?? old_type_env
+              !! type_env;
+            nextsame;
+        }
+
     }
 
     multi sub trait_mod:<is>(Method:D \meth, :$also!) is export {
