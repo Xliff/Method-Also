@@ -3,7 +3,7 @@ use Test;
 
 use Method::Also;
 
-plan 13;
+plan 14;
 
 class A {
     has $.foo;
@@ -33,7 +33,9 @@ role Ber {
     }
 }
 
-class Bar does Ber {
+class Bar {
+    also does Ber;
+
     multi method foo()     is also<bar>   { 42 }
     multi method foo($foo) is also<bazzy> { $foo }
 }
@@ -43,11 +45,13 @@ is Bar.foo(666),            666, 'is foo(666) ok';
 is Bar.bar,                  42, 'is bar() ok';
 is Bar.bazzy(768),          768, 'is bazzy(768) ok';
 is Bar.bar_ber('a'),      'Str', "is Bar.bar_ber('a') ok";
-is Bar.bar_ber(42),       'Int', "is Bar.bar_ber(42) ok";
-is Bar.bar_ber(:hazzy), 'Hazzy', "is Bar.bar_ber(:hazzy) ok";
 is Bar.bar-ber('a'),      'Str', "is Bar.bar-ber('a') ok";
+is Bar.bar_ber(42),       'Int', "is Bar.bar_ber(42) ok";
 is Bar.bar-ber(42),       'Int', "is Bar.bar-ber(42) ok";
 pass 'This is not a test!';
+diag Bar.^methods.map( *.name );
+#diag getAllAliases;
+is Bar.bar_ber(:hazzy), 'Hazzy', "is Bar.bar_ber(:hazzy) ok";
 is Bar.bar-ber(:hazzy), 'Hazzy', "is Bar.bar-ber(:hazzy) ok";
 
 # vim: ft=perl6 expandtab sw=4
